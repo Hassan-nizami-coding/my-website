@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Talk to Type</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f0f8ff;
+        padding: 40px;
+      }
+
+      h1 {
+        color: #0077cc;
+      }
+
+      button {
+        background-color: #0077cc;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        margin-top: 20px;
+      }
+
+      button:hover {
+        background-color: #005fa3;
+      }
+
+      #output {
+        margin-top: 30px;
+        font-size: 20px;
+        border: 2px dashed #aaa;
+        padding: 20px;
+        width: 80%;
+        margin-left: auto;
+        margin-right: auto;
+        background-color: #fff;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎤 Talk to Type</h1>
+    <button onclick="startListening()">Start Talking</button>
+
+    <div id="output">Your speech will appear here...</div>
+
+    <script>
+      function startListening() {
+        const output = document.getElementById("output");
+
+        // Check browser support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+          output.textContent = "Speech Recognition not supported in this browser.";
+          return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        output.textContent = "Listening... 🎙️";
+
+        recognition.start();
+
+        recognition.onresult = function (event) {
+          const transcript = event.results[0][0].transcript;
+          output.textContent = transcript;
+        };
+
+        recognition.onerror = function (event) {
+          output.textContent = "Error: " + event.error;
+        };
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Object Detector for the Blind</title>
+  <style>
+    video, canvas {
+      width: 300px;
+      height: auto;
+      margin: 10px;
+      border-radius: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>See with Sound</h1>
+  <video id="webcam" autoplay playsinline></video>
+  <br>
+  <button onclick="detectObjects()">Detect</button>
+  <p id="output"></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+  <script>
+    const video = document.getElementById('webcam');
+    const output = document.getElementById('output');
+    let model;
+
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+    }
+
+    async function loadModel() {
+      model = await cocoSsd.load();
+    }
+
+    async function detectObjects() {
+      const predictions = await model.detect(video);
+      if (predictions.length > 0) {
+        const names = predictions.map(p => p.class).join(', ');
+        output.textContent = "I see: " + names;
+
+        // Speak it out loud
+        const msg = new SpeechSynthesisUtterance("I see: " + names);
+        window.speechSynthesis.speak(msg);
+      } else {
+        output.textContent = "I see nothing.";
+        const msg = new SpeechSynthesisUtterance("I see nothing");
+        window.speechSynthesis.speak(msg);
+      }
+    }
+
+    // Load everything
+    loadModel();
+    startCamera();
+  </script>
+</body>
+</html>
