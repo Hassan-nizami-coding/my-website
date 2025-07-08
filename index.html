@@ -22,30 +22,46 @@
   <button onclick="detectObjects()">Detect</button>
   <p id="output"></p>
 
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+  <!-- Load from local assets -->
+  <script src="lib/tf.min.js"></script>
+  <script src="lib/coco-ssd.min.js"></script>
   <script>
     const video = document.getElementById('webcam');
     const output = document.getElementById('output');
     let model;
 
+    // Start the camera
     async function startCamera() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       video.srcObject = stream;
     }
 
+    // Load TensorFlow model
     async function loadModel() {
       model = await cocoSsd.load();
     }
 
+    // Determine object position
+    function describePosition(obj) {
+      const [x] = obj.bbox;
+      const width = video.videoWidth;
+      if (x < width / 3) return "on the left";
+      if (x > width * 2 / 3) return "on the right";
+      return "in the center";
+    }
+
+    // Detect objects and describe with context
     async function detectObjects() {
       const predictions = await model.detect(video);
       if (predictions.length > 0) {
-        const names = predictions.map(p => p.class).join(', ');
-        output.textContent = "I see: " + names;
+        const descriptions = predictions.map(p =>
+          `a ${p.class} ${describePosition(p)}`
+        );
 
-        // Speak it out loud
-        const msg = new SpeechSynthesisUtterance("I see: " + names);
+        const message = "I see: " + descriptions.join(", ");
+        output.textContent = message;
+
+        const msg = new SpeechSynthesisUtterance(message);
         window.speechSynthesis.speak(msg);
       } else {
         output.textContent = "I see nothing.";
@@ -54,9 +70,14 @@
       }
     }
 
-    // Load everything
+    // Activate everything
     loadModel();
     startCamera();
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
   </script>
 </body>
 </html>
