@@ -11,49 +11,29 @@
   </style>
 </head>
 <body>
-  <h1>blindAid Assistant</h1>
-  <video id="webcam" autoplay playsinline></video><br>
-  <button onclick="detectObjects()">Detect Objects</button>
-  <p id="output">Awaiting detection...</p>
+  <body>
+  <header>
+    <h1>blindAid</h1>
+    <p>See with Sound</p>
+  </header>
 
-  <script src="lib/tf.min.js"></script>
-  <script src="lib/coco-ssd.min.js"></script>
-  <script>
-    const video = document.getElementById('webcam');
-    const output = document.getElementById('output');
-    let model;
+  <main>
+    <section class="camera-box">
+      <video id="camera-feed" autoplay></video>
+      <p id="object-description"><strong>I see:</strong> a cell phone in the center.</p>
+    </section>
 
-    async function startCamera() {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
-    }
+    <nav class="settings-nav">
+      <button>🔊 Voice Mode</button>
+      <button>🎛️ Settings</button>
+    </nav>
+  </main>
 
-    async function loadModel() {
-      model = await cocoSsd.load();
-    }
+  <footer>
+    <p>Created by Hassan • <a href="#">GitHub</a></p>
+  </footer>
+</body>
 
-    function describePosition(obj) {
-      const [x] = obj.bbox;
-      const width = video.videoWidth;
-      if (x < width / 3) return "on the left";
-      if (x > width * 2 / 3) return "on the right";
-      return "in the center";
-    }
-
-    async function detectObjects() {
-      const predictions = await model.detect(video);
-      if (predictions.length > 0) {
-        const descriptions = predictions.map(p => `a ${p.class} ${describePosition(p)}`);
-        const spoken = "I see: " + descriptions.join(", ");
-        output.textContent = spoken;
-        const msg = new SpeechSynthesisUtterance(spoken);
-        window.speechSynthesis.speak(msg);
-      } else {
-        output.textContent = "I see nothing.";
-        const msg = new SpeechSynthesisUtterance("I see nothing.");
-        window.speechSynthesis.speak(msg);
-      }
-    }
 
     loadModel();
     startCamera();
