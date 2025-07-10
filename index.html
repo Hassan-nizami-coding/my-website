@@ -10,6 +10,7 @@
       color: #333;
       margin: 0;
       padding: 1rem;
+      transition: background-color 0.3s ease;
     }
 
     header {
@@ -33,16 +34,23 @@
       background-color: #005EA6;
     }
 
-    #statusMessage {
-      font-size: 1.2rem;
-      margin-top: 1rem;
-      color: #0078D7;
-    }
-
     video {
       width: 100%;
       max-width: 400px;
       border-radius: 12px;
+    }
+
+    #object-description,
+    #detectionStatus {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+    }
+
+    #statusMessage {
+      font-size: 1.2rem;
+      margin-top: 1rem;
+      color: #0078D7;
     }
 
     footer {
@@ -67,6 +75,7 @@
     <section id="camera">
       <video id="camera-feed" autoplay></video>
       <p id="object-description"><strong>I see:</strong> waiting for input...</p>
+      <p id="detectionStatus"><strong>Status:</strong> OFF</p>
     </section>
 
     <section id="output">
@@ -80,13 +89,30 @@
   </footer>
 
   <script>
+    let isDetecting = false;
+
     function startDetection() {
+      if (isDetecting) return;
+      isDetecting = true;
+
       showStatus("Detecting objects...");
-      // trigger model logic here
+      updateDetectionStatus(true);
+      setBackground(true);
+
+      // 👉 Insert your detection logic here
+
+      setTimeout(() => {
+        isDetecting = false;
+        showStatus("Ready for next input");
+        updateDetectionStatus(false);
+        setBackground(false);
+      }, 5000); // Adjust duration as needed
     }
 
     function stopDetection() {
       showStatus("Detection stopped.");
+      updateDetectionStatus(false);
+      setBackground(false);
     }
 
     function showStatus(message) {
@@ -99,8 +125,18 @@
       document.getElementById("detectedObjects").appendChild(item);
     }
 
-    loadModel(); // If defined elsewhere
-    startCamera(); // If defined elsewhere
+    function updateDetectionStatus(isOn) {
+      const el = document.getElementById("detectionStatus");
+      el.textContent = `Status: ${isOn ? "ON" : "OFF"}`;
+    }
+
+    function setBackground(active) {
+      document.body.style.backgroundColor = active ? "#e8f5e9" : "#f4f4f4";
+    }
+
+    // 🔧 External model and camera setup
+    loadModel();
+    startCamera();
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js');
@@ -108,4 +144,3 @@
   </script>
 </body>
 </html>
-
