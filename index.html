@@ -151,7 +151,22 @@ function startCamera() {
 }
 
     loadModel(); // If defined elsewhere
-    startCamera(); // If defined elsewhere
+    function startCamera() {
+  console.log("Attempting to start camera"); // ✅ Logs every time it's called
+
+  const video = document.getElementById("camera-feed");
+
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then((stream) => {
+      console.log("Camera stream received"); // ✅ Move this inside the success path!
+      video.srcObject = stream;
+    })
+    .catch((err) => {
+      console.error("Camera access error:", err);
+      showStatus("Camera access denied");
+    });
+}
+
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js');
