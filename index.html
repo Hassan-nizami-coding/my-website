@@ -1,173 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <style>
-  video {
-    background: black;
-    width: 100%;
-    max-width: 400px;
-    border-radius: 12px;
-    display: block;
-  }
-</style>
-
-  <meta charset="UTF-8" />
-  <title>blindAid: See with Sound</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f4f4;
-      color: #333;
-      margin: 0;
-      padding: 1rem;
-      transition: background-color 0.3s ease;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    button {
-      padding: 0.75rem 1.5rem;
-      margin: 0.5rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      background-color: #0078D7;
-      color: white;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #005EA6;
-    }
-
-    video {
-      width: 100%;
-      max-width: 400px;
-      border-radius: 12px;
-    }
-
-    #object-description,
-    #detectionStatus {
-      display: block;
-      margin-top: 0.5rem;
-      font-size: 1rem;
-    }
-
-    #statusMessage {
-      font-size: 1.2rem;
-      margin-top: 1rem;
-      color: #0078D7;
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 2rem;
-      font-size: 0.9rem;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>blindAid - Object Detection</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
     <h1>blindAid</h1>
-    <p>See with Sound</p>
+    <p>Accessible Object Detection Powered by AI</p>
   </header>
 
   <main>
-    <section id="controls">
-      <button onclick="startDetection()">Start Detection</button>
-      <button onclick="stopDetection()">Stop Detection</button>
-    </section>
-
-    <section id="camera">
-      <video id="camera-feed" autoplay></video>
-      <p id="object-description"><strong>I see:</strong> waiting for input...</p>
-      <p id="detectionStatus"><strong>Status:</strong> OFF</p>
-    </section>
-
-    <section id="output">
-      <div id="statusMessage">Status: Ready</div>
-      <ul id="detectedObjects"></ul>
-    </section>
+    <video id="video" autoplay muted playsinline></video>
+    <div id="status">Loading model...</div>
+    <ul id="objects"></ul>
   </main>
 
-  <footer>
-    <p>Created by Hassan • <a href="#">GitHub</a></p>
-  </footer>
+  <!-- Load TensorFlow and COCO-SSD from your local lib folder -->
+  <script src="lib/tf.min.js"></script>
+  <script src="lib/coco-ssd.min.js"></script>
 
   <script>
-    let isDetecting = false;
+    let video = document.getElementById('video');
+    let status = document.getElementById('status');
+    let objectsList = document.getElementById('objects');
+    let model;
 
-    function startDetection() {
-      if (isDetecting) return;
-      isDetecting = true;
+    // Start camera stream
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error("Camera error:", err);
+        status.textContent = "Camera access denied";
+      });
 
-      showStatus("Detecting objects...");
-      updateDetectionStatus(true);
-      setBackground(true);
-
-      // 👉 Your object detection logic goes here...
-
-      setTimeout(() => {
-        isDetecting = false;
-        showStatus("Ready for next input");
-        updateDetectionStatus(false);
-        setBackground(false);
-      }, 5000); // Adjust duration as needed
-    }
-
-    function stopDetection() {
-      showStatus("Detection stopped.");
-      updateDetectionStatus(false);
-      setBackground(false);
-    }
-
-    function showStatus(message) {
-      document.getElementById("statusMessage").textContent = message;
-    }
-
-    function showDetectedObject(name) {
-      const item = document.createElement("li");
-      item.textContent = name;
-      document.getElementById("detectedObjects").appendChild(item);
-    }
-
-    function updateDetectionStatus(isOn) {
-      const el = document.getElementById("detectionStatus");
-      el.textContent = `Status: ${isOn ? "ON" : "OFF"}`;
-    }
-
-    function setBackground(active) {
-      document.body.style.backgroundColor = active ? "#e8f5e9" : "#f4f4f4";
-    }
-}
-
-    loadModel(); // If defined elsewhere
-    function startCamera() {
-  console.log("Attempting to start camera"); // ✅ Logs every time it's called
-
-  const video = document.getElementById("camera-feed");
-
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then((stream) => {
-      console.log("Camera stream received"); // ✅ Move this inside the success path!
-      video.srcObject = stream;
-    })
-    .catch((err) => {
-      console.error("Camera access error:", err);
-      showStatus("Camera access denied");
+    // Load COCO-SSD model and begin detection
+    cocoSsd.load().then(loadedModel => {
+      model = loadedModel;
+      status.textContent = "Model loaded. Detecting...";
+      detectLoop();
     });
-}
 
-window.addEventListener('DOMContentLoaded', startCamera);
-    
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
+    // Run detection loop
+    function detectLoop() {
+      model.detect(video).then(predictions => {
+        objectsList.innerHTML = '';
+        predictions.forEach(pred => {
+          const item = document.createElement('li');
+          item.textContent = pred.class;
+          objectsList.appendChild(item);
+        });
+        requestAnimationFrame(detectLoop);
+      });
     }
   </script>
 </body>
 </html>
-
