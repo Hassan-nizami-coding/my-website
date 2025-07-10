@@ -133,6 +133,18 @@
     function setBackground(active) {
       document.body.style.backgroundColor = active ? "#e8f5e9" : "#f4f4f4";
     }
+function startCamera() {
+  const video = document.getElementById("camera-feed");
+
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then((stream) => {
+      video.srcObject = stream;
+    })
+    .catch((err) => {
+      console.error("Camera access error:", err);
+      showStatus("Camera access denied");
+    });
+}
 
     loadModel(); // If defined elsewhere
     startCamera(); // If defined elsewhere
