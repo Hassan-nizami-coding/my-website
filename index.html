@@ -134,6 +134,8 @@
       document.body.style.backgroundColor = active ? "#e8f5e9" : "#f4f4f4";
     }
 function startCamera() {
+  console.log("Attempting to start camera");
+
   const video = document.getElementById("camera-feed");
 
   navigator.mediaDevices.getUserMedia({ video: true })
@@ -141,6 +143,8 @@ function startCamera() {
       video.srcObject = stream;
     })
     .catch((err) => {
+      console.log("Camera stream received");
+
       console.error("Camera access error:", err);
       showStatus("Camera access denied");
     });
