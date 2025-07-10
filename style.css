@@ -1,0 +1,53 @@
+/* Core Layout */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  color: #222;
+  text-align: center;
+}
+
+/* Header Styling */
+header {
+  margin-bottom: 2rem;
+}
+
+h1 {
+  font-size: 2.2rem;
+  margin: 0;
+}
+
+p {
+  font-size: 1rem;
+  color: #666;
+}
+
+/* Video Feed */
+video {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 12px;
+  background: black;
+  margin: 0 auto;
+  display: block;
+}
+
+/* Detection Status */
+#status {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  color: #0078D7;
+}
+
+/* Object List */
+ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+}
+
+li {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
