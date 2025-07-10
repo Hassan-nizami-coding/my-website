@@ -1,1 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>blindAid: See with Sound</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      margin: 0;
+      padding: 1rem;
+      transition: background-color 0.3s ease;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      margin: 0.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #0078D7;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #005EA6;
+    }
+
+    video {
+      width: 100%;
+      max-width: 400px;
+      border-radius: 12px;
+    }
+
+    #object-description,
+    #detectionStatus {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+    }
+
+    #statusMessage {
+      font-size: 1.2rem;
+      margin-top: 1rem;
+      color: #0078D7;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>blindAid</h1>
+    <p>See with Sound</p>
+  </header>
+
+  <main>
+    <section id="controls">
+      <button onclick="startDetection()">Start Detection</button>
+      <button onclick="stopDetection()">Stop Detection</button>
+    </section>
+
+    <section id="camera">
+      <video id="camera-feed" autoplay></video>
+      <p id="object-description"><strong>I see:</strong> waiting for input...</p>
+      <p id="detectionStatus"><strong>Status:</strong> OFF</p>
+    </section>
+
+    <section id="output">
+      <div id="statusMessage">Status: Ready</div>
+      <ul id="detectedObjects"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>Created by Hassan • <a href="#">GitHub</a></p>
+  </footer>
+
+  <script>
+    let isDetecting = false;
+
+    function startDetection() {
+      if (isDetecting) return;
+      isDetecting = true;
+
+      showStatus("Detecting objects...");
+      updateDetectionStatus(true);
+      setBackground(true);
+
+      // 👉 Your object detection logic goes here...
+
+      setTimeout(() => {
+        isDetecting = false;
+        showStatus("Ready for next input");
+        updateDetectionStatus(false);
+        setBackground(false);
+      }, 5000); // Adjust duration as needed
+    }
+
+    function stopDetection() {
+      showStatus("Detection stopped.");
+      updateDetectionStatus(false);
+      setBackground(false);
+    }
+
+    function showStatus(message) {
+      document.getElementById("statusMessage").textContent = message;
+    }
+
+    function showDetectedObject(name) {
+      const item = document.createElement("li");
+      item.textContent = name;
+      document.getElementById("detectedObjects").appendChild(item);
+    }
+
+    function updateDetectionStatus(isOn) {
+      const el = document.getElementById("detectionStatus");
+      el.textContent = `Status: ${isOn ? "ON" : "OFF"}`;
+    }
+
+    function setBackground(active) {
+      document.body.style.backgroundColor = active ? "#e8f5e9" : "#f4f4f4";
+    }
+
+    loadModel(); // If defined elsewhere
+    startCamera(); // If defined elsewhere
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+</body>
+</html>
 
