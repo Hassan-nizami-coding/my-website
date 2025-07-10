@@ -1,42 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>blindAid: See with Sound</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 20px; }
-    video { width: 300px; border-radius: 10px; margin-bottom: 10px; }
-    button { padding: 10px 20px; font-size: 16px; }
-    p { font-weight: bold; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      margin: 0.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #0078D7;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #005EA6;
+    }
+
+    #statusMessage {
+      font-size: 1.2rem;
+      margin-top: 1rem;
+      color: #0078D7;
+    }
+
+    video {
+      width: 100%;
+      max-width: 400px;
+      border-radius: 12px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
-  <body>
   <header>
     <h1>blindAid</h1>
     <p>See with Sound</p>
   </header>
 
   <main>
-    <section class="camera-box">
-      <video id="camera-feed" autoplay></video>
-      <p id="object-description"><strong>I see:</strong> a cell phone in the center.</p>
+    <section id="controls">
+      <button onclick="startDetection()">Start Detection</button>
+      <button onclick="stopDetection()">Stop Detection</button>
     </section>
 
-    <nav class="settings-nav">
-      <button>🔊 Voice Mode</button>
-      <button>🎛️ Settings</button>
-    </nav>
+    <section id="camera">
+      <video id="camera-feed" autoplay></video>
+      <p id="object-description"><strong>I see:</strong> waiting for input...</p>
+    </section>
+
+    <section id="output">
+      <div id="statusMessage">Status: Ready</div>
+      <ul id="detectedObjects"></ul>
+    </section>
   </main>
 
   <footer>
     <p>Created by Hassan • <a href="#">GitHub</a></p>
   </footer>
-</body>
 
+  <script>
+    function startDetection() {
+      showStatus("Detecting objects...");
+      // trigger model logic here
+    }
 
-    loadModel();
-    startCamera();
+    function stopDetection() {
+      showStatus("Detection stopped.");
+    }
+
+    function showStatus(message) {
+      document.getElementById("statusMessage").textContent = message;
+    }
+
+    function showDetectedObject(name) {
+      const item = document.createElement("li");
+      item.textContent = name;
+      document.getElementById("detectedObjects").appendChild(item);
+    }
+
+    loadModel(); // If defined elsewhere
+    startCamera(); // If defined elsewhere
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js');
@@ -44,3 +108,4 @@
   </script>
 </body>
 </html>
+
