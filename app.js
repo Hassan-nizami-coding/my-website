@@ -1,102 +1,111 @@
-const video = document.getElementById('video');
-const startBtn = document.getElementById('startBtn');
-const stopBtn = document.getElementById('stopBtn');
+const video        = document.getElementById('video');
+const startBtn     = document.getElementById('startBtn');
+const stopBtn      = document.getElementById('stopBtn');
+const enterBtn     = document.getElementById('enterBtn');
 const cameraSelect = document.getElementById('cameraSelect');
-const status = document.getElementById('status');
-const objectsList = document.getElementById('objects');
-let model;
-let currentStream;
-let isDetecting = false;
-const homeScreen = document.getElementById('homeScreen');
-const detectionScreen = document.getElementById('detectionScreen');
-const enterBtn = document.getElementById('enterBtn');
+const status       = document.getElementById('status');
+const objectsList  = document.getElementById('objects');
+const homeScreen   = document.getElementById('homeScreen');
+const detectScreen = document.getElementById('detectionScreen');
 
-enterBtn.addEventListener('click', () => {
-  homeScreen.style.display = 'none';
-  detectionScreen.style.display = 'block';
-  startCamera(cameraSelect.value);
-});
+let model, currentStream, isDetecting = false;
 
+// 1️⃣ Populate camera list
 async function getCameras() {
   const devices = await navigator.mediaDevices.enumerateDevices();
   const videoDevices = devices.filter(d => d.kind === 'videoinput');
   cameraSelect.innerHTML = '';
-  videoDevices.forEach((device, index) => {
-    const option = document.createElement('option');
-    option.value = device.deviceId;
-    option.text = device.label || `Camera ${index + 1}`;
-    cameraSelect.appendChild(option);
+  videoDevices.forEach((d,i) => {
+    const opt = document.createElement('option');
+    opt.value = d.deviceId;
+    opt.text  = d.label || `Camera ${i+1}`;
+    cameraSelect.append(opt);
   });
 }
 
+// 2️⃣ Start video stream for given device
 async function startCamera(deviceId) {
   if (currentStream) {
-    currentStream.getTracks().forEach(track => track.stop());
+    currentStream.getTracks().forEach(t => t.stop());
   }
-
-  const constraints = {
-    video: { deviceId: deviceId ? { exact: deviceId } : undefined }
-  };
-
   try {
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    video.srcObject = stream;
-    currentStream = stream;
-  } catch (err) {
-    console.error("Camera error:", err);
-    status.textContent = "Camera access denied";
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { deviceId: deviceId ? { exact: deviceId } : undefined }
+    });
+    video.srcObject    = stream;
+    currentStream      = stream;
+  } catch (e) {
+    console.error('Camera error:', e);
+    status.textContent = 'Camera access denied';
   }
 }
 
-cameraSelect.addEventListener('change', () => {
-  startBtn.addEventListener('click', () => {
+// 3️⃣ Detection loop
+function detectLoop() {
+  if (!isDetecting) return;
+  model.detect(video).then(preds => {
+    objectsList.innerHTML = '';
+    if (!preds.length) {
+      objectsList.innerHTML = '<li>No objects detected</li>';
+    } else {
+      preds.forEach(p => {
+        const [x,w] = [p.bbox[0], p.bbox[2]];
+        const cx     = x + w/2;
+        const zone   = cx < video.videoWidth/3 ? 'left'
+                     : cx < 2*video.videoWidth/3 ? 'center'
+                     : 'right';
+        const li     = document.createElement('li');
+        li.textContent = `I see a ${p.class} on the ${zone}`;
+        objectsList.append(li);
+      });
+    }
+    requestAnimationFrame(detectLoop);
+  });
+}
+
+// 4️⃣ Wire up buttons
+enterBtn.addEventListener('click', () => {
+  homeScreen.classList.add('hidden');
+  detectScreen.classList.remove('hidden');
+  startCamera(cameraSelect.value);
+  // if model is already loaded, kick off detection
+  if (model) {
+    isDetecting = true;
+    status.textContent = 'Detecting…';
+    detectLoop();
+  }
+});
+
+startBtn.addEventListener('click', () => {
   isDetecting = true;
-  status.textContent = "Detecting...";
+  status.textContent = 'Detecting…';
   detectLoop();
 });
 
 stopBtn.addEventListener('click', () => {
   isDetecting = false;
-  status.textContent = "Stopped detecting.";
+  status.textContent = 'Detection stopped.';
 });
 
-  startCamera(cameraSelect.value);
+// 5️⃣ Load the model
+cocoSsd.load().then(m => {
+  model = m;
+  status.textContent = 'Model loaded! Select camera and enter.';
 });
 
-cocoSsd.load().then(loadedModel => {
-  model = loadedModel;
-  status.textContent = "Model loaded. Detecting...";
-});
-function detectLoop() {
-   if (!isDetecting) return; // 🛑 Prevent detection when it's paused
-  model.detect(video).then(predictions => {
-    objectsList.innerHTML = '';
-
-    if (predictions.length === 0) {
-      const item = document.createElement('li');
-      item.textContent = "No objects detected";
-      objectsList.appendChild(item);
-    } else {
-      predictions.forEach(pred => {
-        const [x, y, width, height] = pred.bbox;
-        const centerX = x + width / 2;
-        const position = centerX < video.videoWidth / 3
-          ? 'left' : centerX < 2 * video.videoWidth / 3
-          ? 'center' : 'right';
-
-        const item = document.createElement('li');
-        item.textContent = `I see a ${pred.class} on the ${position}`;
-        objectsList.appendChild(item);
-      });
-    }
-
-    requestAnimationFrame(detectLoop);
-  });
-}
-
-
+// 6️⃣ Initialize
 getCameras().then(() => {
-  if (cameraSelect.options.length > 0) {
-    startCamera(cameraSelect.options[0].value);
+  if (cameraSelect.options.length) {
+    cameraSelect.selectedIndex = 0;
   }
 });
+cameraSelect.addEventListener('change', () => {
+  if (!homeScreen.classList.contains('hidden')) {
+    // if you switch camera before entering
+    startCamera(cameraSelect.value);
+  } else {
+    // if you switch mid‑detection
+    startCamera(cameraSelect.value);
+  }
+});
+
