@@ -106,8 +106,13 @@ function detectLoop() {
 startBtn.addEventListener('click', () => {
   isDetecting = true;
   status.textContent = 'Detecting…';
+
+  // ←—— Add this line to remove the white overlay
+  detectScreen.classList.add('detecting');
+
   detectLoop();
 });
+
 
 stopBtn.addEventListener('click', () => {
   isDetecting = false;
