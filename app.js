@@ -40,6 +40,17 @@ async function startCamera(deviceId) {
 }
 
 cameraSelect.addEventListener('change', () => {
+  startBtn.addEventListener('click', () => {
+  isDetecting = true;
+  status.textContent = "Detecting...";
+  detectLoop();
+});
+
+stopBtn.addEventListener('click', () => {
+  isDetecting = false;
+  status.textContent = "Stopped detecting.";
+});
+
   startCamera(cameraSelect.value);
 });
 
