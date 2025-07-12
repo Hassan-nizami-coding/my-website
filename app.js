@@ -112,19 +112,26 @@ cocoSsd.load().then(m => {
   status.textContent = 'Model loaded! Select camera and enter.';
 });
 
-// 6️⃣ Initialize
-getCameras().then(() => {
-  if (cameraSelect.options.length) {
-    cameraSelect.selectedIndex = 0;
-  }
-});
-cameraSelect.addEventListener('change', () => {
-  if (!homeScreen.classList.contains('hidden')) {
-    // if you switch camera before entering
-    startCamera(cameraSelect.value);
-  } else {
-    // if you switch mid‑detection
-    startCamera(cameraSelect.value);
-  }
+// ─── Initialization (REPLACED) ───────────────────────
+cocoSsd.load().then(m => {
+  model = m;
+  status.textContent = 'Model loaded! Please select a camera.';
 });
 
+getCameras();
+
+enterBtn.addEventListener('click', async () => {
+  if (!cameraSelect.value) {
+    status.textContent = 'No camera available.';
+    return;
+  }
+  homeScreen.classList.add('hidden');
+  detectScreen.classList.remove('hidden');
+
+  await startCamera(cameraSelect.value);
+  if (model) {
+    isDetecting    = true;
+    status.textContent = 'Detecting…';
+    detectLoop();
+  }
+});
