@@ -126,6 +126,7 @@ cocoSsd.load().then(m => {
   getCameras();
 cocoSsd.load().then(m => {
   model = m;
+   console.log("✅ Model loaded");
   status.textContent = 'Model loaded! Please select a camera.';
 
   // Warm up speech synthesis
