@@ -101,12 +101,18 @@ function detectLoop() {
       utteranceText = `I see a ${first.class} on the ${zone}`;
     }
 
-    // Speak result
     if ('speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance(utteranceText);
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-    }
+  window.speechSynthesis.cancel();
+  let delay = 0;
+  preds.forEach(p => {
+    const cx = p.bbox[0] + p.bbox[2] / 2;
+    const zone = cx < video.videoWidth / 3 ? 'left' : cx < 2 * video.videoWidth / 3 ? 'center' : 'right';
+    const msg = new SpeechSynthesisUtterance(`I see a ${p.class} on the ${zone}`);
+    setTimeout(() => speechSynthesis.speak(msg), delay);
+    delay += 1000; // 1-second gap between utterances
+  });
+}
+
 
     requestAnimationFrame(detectLoop);
   });
