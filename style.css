@@ -65,4 +65,28 @@ li {
   margin-left: auto;
   margin-right: auto;
 }
+/* Fullscreen Camera View */
+video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+  background: black;
+}
+
+/* Overlay Content */
+main {
+  position: relative;
+  z-index: 1;
+  padding: 2rem;
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+  border-radius: 12px;
+  max-width: 600px;
+  margin: auto;
+  margin-top: 2rem;
+}
 
