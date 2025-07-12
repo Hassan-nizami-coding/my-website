@@ -45,18 +45,33 @@ cocoSsd.load().then(loadedModel => {
   status.textContent = "Model loaded. Detecting...";
   detectLoop();
 });
-
 function detectLoop() {
   model.detect(video).then(predictions => {
     objectsList.innerHTML = '';
+    const videoWidth = video.videoWidth;
+
     predictions.forEach(pred => {
+      const [x, y, width, height] = pred.bbox;
+      const centerX = x + width / 2;
+
+      let position;
+      if (centerX < videoWidth / 3) {
+        position = 'left';
+      } else if (centerX < 2 * videoWidth / 3) {
+        position = 'center';
+      } else {
+        position = 'right';
+      }
+
       const item = document.createElement('li');
-      item.textContent = pred.class;
+      item.textContent = `I see a ${pred.class} on the ${position}`;
       objectsList.appendChild(item);
     });
+
     requestAnimationFrame(detectLoop);
   });
 }
+
 
 getCameras().then(() => {
   if (cameraSelect.options.length > 0) {
