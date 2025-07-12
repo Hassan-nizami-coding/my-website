@@ -89,4 +89,33 @@ main {
   margin: auto;
   margin-top: 2rem;
 }
+/* === Screen Separation === */
+#homeScreen {
+  margin-top: 3rem;
+  text-align: center;
+}
+
+#enterBtn {
+  padding: 0.8rem 1.5rem;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  background-color: #0078D7;
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+/* Optional: detection screen styling */
+#detectionScreen main {
+  position: relative;
+  z-index: 1;
+  padding: 2rem;
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+  border-radius: 12px;
+  max-width: 600px;
+  margin: auto;
+  margin-top: 2rem;
+}
 
