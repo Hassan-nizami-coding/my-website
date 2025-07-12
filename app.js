@@ -13,7 +13,6 @@ let model, currentStream, isDetecting = false;
 // 1️⃣ Populate camera list (with permission priming)
 async function getCameras() {
   try {
-    // Prompt for permission so labels show up
     const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
     tempStream.getTracks().forEach(t => t.stop());
   } catch (err) {
@@ -50,13 +49,13 @@ async function startCamera(deviceId) {
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    console.log("✅ Got camera stream");
     video.srcObject   = stream;
     currentStream     = stream;
   } catch (err) {
     console.error("Camera error:", err);
     status.textContent = "Couldn't access that camera, using default.";
     if (deviceId) {
-      // Retry with default
       await startCamera(null);
     }
   }
@@ -106,27 +105,19 @@ function detectLoop() {
 startBtn.addEventListener('click', () => {
   isDetecting = true;
   status.textContent = 'Detecting…';
-
-  // ←—— Add this line to remove the white overlay
   detectScreen.classList.add('detecting');
-
   detectLoop();
 });
-
 
 stopBtn.addEventListener('click', () => {
   isDetecting = false;
   status.textContent = 'Detection stopped.';
 });
 
-// 5️⃣ Model load + initialization
+// 5️⃣ Load model ONCE and initialize
 cocoSsd.load().then(m => {
   model = m;
-  status.textContent = 'Model loaded! Please select a camera.';
-  getCameras();
-cocoSsd.load().then(m => {
-  model = m;
-   console.log("✅ Model loaded");
+  console.log("✅ Model loaded");
   status.textContent = 'Model loaded! Please select a camera.';
 
   // Warm up speech synthesis
@@ -138,7 +129,7 @@ cocoSsd.load().then(m => {
   getCameras();
 });
 
-
+// 6️⃣ Enter button switches to detection screen
 enterBtn.addEventListener('click', async () => {
   if (!cameraSelect.value) {
     status.textContent = 'No camera available.';
