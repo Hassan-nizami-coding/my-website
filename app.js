@@ -7,6 +7,15 @@ const objectsList = document.getElementById('objects');
 let model;
 let currentStream;
 let isDetecting = false;
+const homeScreen = document.getElementById('homeScreen');
+const detectionScreen = document.getElementById('detectionScreen');
+const enterBtn = document.getElementById('enterBtn');
+
+enterBtn.addEventListener('click', () => {
+  homeScreen.style.display = 'none';
+  detectionScreen.style.display = 'block';
+  startCamera(cameraSelect.value);
+});
 
 async function getCameras() {
   const devices = await navigator.mediaDevices.enumerateDevices();
