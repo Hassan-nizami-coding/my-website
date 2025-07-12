@@ -12,16 +12,35 @@ let model, currentStream, isDetecting = false;
 
 // 1️⃣ Populate camera list
 async function getCameras() {
+  // 1) Prompt for any camera to get permissions & labels
+  try {
+    const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    tempStream.getTracks().forEach(t => t.stop());
+  } catch (err) {
+    console.warn("Camera permission was denied or not available:", err);
+    status.textContent = "Please allow camera access to select device.";
+    return;
+  }
+
+  // 2) Now enumerate all video inputs
   const devices = await navigator.mediaDevices.enumerateDevices();
   const videoDevices = devices.filter(d => d.kind === 'videoinput');
+
+  // 3) Populate the dropdown
   cameraSelect.innerHTML = '';
-  videoDevices.forEach((d,i) => {
+  videoDevices.forEach((d, i) => {
     const opt = document.createElement('option');
     opt.value = d.deviceId;
-    opt.text  = d.label || `Camera ${i+1}`;
+    opt.text  = d.label || `Camera ${i + 1}`;
     cameraSelect.append(opt);
   });
+
+  // 4) Auto‑select the first camera
+  if (cameraSelect.options.length) {
+    cameraSelect.selectedIndex = 0;
+  }
 }
+
 
 // 2️⃣ Start video stream for given device
 async function startCamera(deviceId) {
