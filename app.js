@@ -1,4 +1,6 @@
 const video = document.getElementById('video');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
 const cameraSelect = document.getElementById('cameraSelect');
 const status = document.getElementById('status');
 const objectsList = document.getElementById('objects');
