@@ -68,6 +68,7 @@ cocoSsd.load().then(loadedModel => {
   status.textContent = "Model loaded. Detecting...";
 });
 function detectLoop() {
+   if (!isDetecting) return; // 🛑 Prevent detection when it's paused
   model.detect(video).then(predictions => {
     objectsList.innerHTML = '';
 
