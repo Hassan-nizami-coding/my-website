@@ -49,17 +49,28 @@ async function startCamera(deviceId) {
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    console.log("✅ Got camera stream");
-    video.srcObject   = stream;
-    currentStream     = stream;
+    video.srcObject = stream;
+    currentStream = stream;
+
+    // ✅ Wait for video to fully load
+    await new Promise(resolve => {
+      video.onloadedmetadata = () => {
+        video.play();
+        resolve();
+      };
+    });
+
+    console.log("🎥 Camera ready:", video.videoWidth, "x", video.videoHeight);
+
   } catch (err) {
     console.error("Camera error:", err);
-    status.textContent = "Couldn't access that camera, using default.";
+    status.textContent = "Couldn't access that camera.";
     if (deviceId) {
-      await startCamera(null);
+      await startCamera(null); // fallback
     }
   }
 }
+
 
 // 3️⃣ Detection loop with speech
 function detectLoop() {
