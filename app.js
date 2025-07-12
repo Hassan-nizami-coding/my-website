@@ -48,25 +48,24 @@ cocoSsd.load().then(loadedModel => {
 function detectLoop() {
   model.detect(video).then(predictions => {
     objectsList.innerHTML = '';
-    const videoWidth = video.videoWidth;
 
-    predictions.forEach(pred => {
-      const [x, y, width, height] = pred.bbox;
-      const centerX = x + width / 2;
-
-      let position;
-      if (centerX < videoWidth / 3) {
-        position = 'left';
-      } else if (centerX < 2 * videoWidth / 3) {
-        position = 'center';
-      } else {
-        position = 'right';
-      }
-
+    if (predictions.length === 0) {
       const item = document.createElement('li');
-      item.textContent = `I see a ${pred.class} on the ${position}`;
+      item.textContent = "No objects detected";
       objectsList.appendChild(item);
-    });
+    } else {
+      predictions.forEach(pred => {
+        const [x, y, width, height] = pred.bbox;
+        const centerX = x + width / 2;
+        const position = centerX < video.videoWidth / 3
+          ? 'left' : centerX < 2 * video.videoWidth / 3
+          ? 'center' : 'right';
+
+        const item = document.createElement('li');
+        item.textContent = `I see a ${pred.class} on the ${position}`;
+        objectsList.appendChild(item);
+      });
+    }
 
     requestAnimationFrame(detectLoop);
   });
