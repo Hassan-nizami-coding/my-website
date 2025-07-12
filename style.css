@@ -1,146 +1,73 @@
-/* Core Layout */
-body {
-  font-family: 'Segoe UI', sans-serif;
+/* Core */
+body, html {
   margin: 0;
-  padding: 2rem;
-  background-color: #f9f9f9;
+  padding: 0;
+  height: 100%;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f0f4f8;
   color: #222;
   text-align: center;
 }
+/* Utility */
+.hidden { display: none !important; }
+.screen { padding: 2rem; }
 
-/* Header Styling */
-header {
+/* Home Screen */
+#homeScreen header {
   margin-bottom: 2rem;
 }
-
-h1 {
-  font-size: 2.2rem;
-  margin: 0;
-}
-
-p {
-  font-size: 1rem;
-  color: #666;
-}
-
-/* Video Feed */
-video {
-  width: 100%;
-  max-width: 480px;
-  border-radius: 12px;
-  background: black;
-  margin: 0 auto;
-  display: block;
-}
-
-/* Detection Status */
-#status {
-  margin-top: 1rem;
-  font-size: 1.2rem;
-  color: #0078D7;
-}
-
-/* Object List */
-ul {
-  list-style: none;
-  padding: 0;
-  margin-top: 1rem;
-}
-
-li {
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
-}
-/* Camera Selector */
 #cameraSelect {
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem;
   font-size: 1rem;
-  border: 1px solid #ccc;
   border-radius: 8px;
-  background-color: #fff;
-  color: #333;
-  max-width: 240px;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+  border: 1px solid #ccc;
+  margin-bottom: 1rem;
 }
-/* Fullscreen Camera View */
-video {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  z-index: -1;
-  background: black;
-}
-
-/* Overlay Content */
-main {
-  position: relative;
-  z-index: 1;
-  padding: 2rem;
-  background-color: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(4px);
-  border-radius: 12px;
-  max-width: 600px;
-  margin: auto;
-  margin-top: 2rem;
-}
-/* === Screen Separation === */
-#homeScreen {
-  margin-top: 3rem;
-  text-align: center;
-}
-
 #enterBtn {
   padding: 0.8rem 1.5rem;
   font-size: 1.1rem;
-  border-radius: 8px;
-  background-color: #0078D7;
-  color: white;
+  background: #0078D7;
+  color: #fff;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
-  margin-top: 1rem;
 }
 
-/* Optional: detection screen styling */
-#detectionScreen main {
-  position: relative;
-  z-index: 1;
-  padding: 2rem;
-  background-color: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(4px);
-  border-radius: 12px;
-  max-width: 600px;
-  margin: auto;
-  margin-top: 2rem;
-}
-/* Fullscreen camera */
+/* Fullscreen video background */
 video {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
   object-fit: cover;
   z-index: -1;
-  background: black;
+  background: #000;
 }
 
-/* Overlay buttons and detection status */
+/* Detection UI overlay */
 #detectionScreen main {
   position: absolute;
   bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  background-color: rgba(255,255,255,0.75);
+  left: 50%; transform: translateX(-50%);
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(4px);
   padding: 1.5rem;
   border-radius: 12px;
   max-width: 90%;
-  backdrop-filter: blur(4px);
 }
-
+#status {
+  font-size: 1.2rem;
+  color: #0078D7;
+  margin-bottom: 1rem;
+}
+ul { list-style: none; padding: 0; margin-bottom: 1rem; }
+li { margin: 0.3rem 0; font-size: 1rem; }
+.btn-group button {
+  padding: 0.6rem 1.2rem;
+  margin: 0 0.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#startBtn { background: #28a745; color: #fff; }
+#stopBtn  { background: #dc3545; color: #fff; }
