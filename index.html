@@ -2,46 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>blindAid - Object Detection</title>
+  <title>blindAid – Object Detection</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>blindAid</h1>
-    <p>Accessible Object Detection Powered by AI</p>
-  </header>
- <body>
-  <header>
-    <h1>blindAid</h1>
-    <p>Accessible Object Detection Powered by AI</p>
-  </header>
 
-  <div id="homeScreen">
-  <header>
-    <h1>blindAid</h1>
-    <p>Accessible Object Detection Powered by AI</p>
-  </header>
-  <select id="cameraSelect"></select>
-  <button id="enterBtn">Enter Detection Mode</button>
-</div>
-
-
-  <!-- 🎯 Detection Screen -->
-  <div id="detectionScreen" style="display: none;">
-    <video id="video" autoplay muted playsinline></video>
-    <main>
-      <div id="status">Waiting for detection...</div>
-      <ul id="objects"></ul>
-      <button id="startBtn">Start Seeing</button>
-      <button id="stopBtn">Stop Seeing</button>
-    </main>
+  <!-- Home screen -->
+  <div id="homeScreen" class="screen">
+    <header>
+      <h1>blindAid</h1>
+      <p>Accessible Object Detection Powered by AI</p>
+    </header>
+    <select id="cameraSelect"></select>
+    <button id="enterBtn">Enter Detection Mode</button>
   </div>
 
-  <script src="lib/tf.min.js"></script>
-  <script src="lib/coco-ssd.min.js"></script>
-  <script src="app.js"></script>
-</body>
-
+  <!-- Detection screen -->
+  <div id="detectionScreen" class="screen hidden">
+    <video id="video" autoplay muted playsinline></video>
+    <main>
+      <div id="status">Loading model…</div>
+      <ul id="objects"></ul>
+      <div class="btn-group">
+        <button id="startBtn">Start Seeing</button>
+        <button id="stopBtn">Stop Seeing</button>
+      </div>
+    </main>
+  </div>
 
   <script src="lib/tf.min.js"></script>
   <script src="lib/coco-ssd.min.js"></script>
