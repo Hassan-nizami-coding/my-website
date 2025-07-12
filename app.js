@@ -124,7 +124,19 @@ cocoSsd.load().then(m => {
   model = m;
   status.textContent = 'Model loaded! Please select a camera.';
   getCameras();
+cocoSsd.load().then(m => {
+  model = m;
+  status.textContent = 'Model loaded! Please select a camera.';
+
+  // Warm up speech synthesis
+  if ('speechSynthesis' in window) {
+    const warmup = new SpeechSynthesisUtterance('');
+    window.speechSynthesis.speak(warmup);
+  }
+
+  getCameras();
 });
+
 
 enterBtn.addEventListener('click', async () => {
   if (!cameraSelect.value) {
