@@ -10,24 +10,22 @@ const detectScreen = document.getElementById('detectionScreen');
 
 let model, currentStream, isDetecting = false;
 
-// 1️⃣ Populate camera list
+// 1️⃣ Populate camera list (with permission priming)
 async function getCameras() {
-  // 1) Prompt for any camera to get permissions & labels
   try {
+    // Prompt for permission so labels show up
     const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
     tempStream.getTracks().forEach(t => t.stop());
   } catch (err) {
-    console.warn("Camera permission was denied or not available:", err);
+    console.warn("Camera permission denied:", err);
     status.textContent = "Please allow camera access to select device.";
     return;
   }
 
-  // 2) Now enumerate all video inputs
   const devices = await navigator.mediaDevices.enumerateDevices();
   const videoDevices = devices.filter(d => d.kind === 'videoinput');
-
-  // 3) Populate the dropdown
   cameraSelect.innerHTML = '';
+
   videoDevices.forEach((d, i) => {
     const opt = document.createElement('option');
     opt.value = d.deviceId;
@@ -35,66 +33,76 @@ async function getCameras() {
     cameraSelect.append(opt);
   });
 
-  // 4) Auto‑select the first camera
   if (cameraSelect.options.length) {
     cameraSelect.selectedIndex = 0;
   }
 }
 
-
-// 2️⃣ Start video stream for given device
+// 2️⃣ Start video stream for given device (with fallback)
 async function startCamera(deviceId) {
   if (currentStream) {
     currentStream.getTracks().forEach(t => t.stop());
   }
+
+  const constraints = deviceId
+    ? { video: { deviceId: { exact: deviceId } } }
+    : { video: true };
+
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { deviceId: deviceId ? { exact: deviceId } : undefined }
-    });
-    video.srcObject    = stream;
-    currentStream      = stream;
-  } catch (e) {
-    console.error('Camera error:', e);
-    status.textContent = 'Camera access denied';
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject   = stream;
+    currentStream     = stream;
+  } catch (err) {
+    console.error("Camera error:", err);
+    status.textContent = "Couldn't access that camera, using default.";
+    if (deviceId) {
+      // Retry with default
+      await startCamera(null);
+    }
   }
 }
 
-// 3️⃣ Detection loop
+// 3️⃣ Detection loop with speech
 function detectLoop() {
   if (!isDetecting) return;
+
   model.detect(video).then(preds => {
     objectsList.innerHTML = '';
+    let utteranceText;
+
     if (!preds.length) {
       objectsList.innerHTML = '<li>No objects detected</li>';
+      utteranceText = 'No objects detected';
     } else {
+      const first = preds[0];
+      const cx    = first.bbox[0] + first.bbox[2] / 2;
+      const zone  = cx < video.videoWidth/3
+        ? 'left'
+        : cx < 2*video.videoWidth/3
+        ? 'center'
+        : 'right';
+
       preds.forEach(p => {
-        const [x,w] = [p.bbox[0], p.bbox[2]];
-        const cx     = x + w/2;
-        const zone   = cx < video.videoWidth/3 ? 'left'
-                     : cx < 2*video.videoWidth/3 ? 'center'
-                     : 'right';
-        const li     = document.createElement('li');
+        const li = document.createElement('li');
         li.textContent = `I see a ${p.class} on the ${zone}`;
         objectsList.append(li);
       });
+
+      utteranceText = `I see a ${first.class} on the ${zone}`;
     }
+
+    // Speak result
+    if ('speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance(utteranceText);
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    }
+
     requestAnimationFrame(detectLoop);
   });
 }
 
-// 4️⃣ Wire up buttons
-enterBtn.addEventListener('click', () => {
-  homeScreen.classList.add('hidden');
-  detectScreen.classList.remove('hidden');
-  startCamera(cameraSelect.value);
-  // if model is already loaded, kick off detection
-  if (model) {
-    isDetecting = true;
-    status.textContent = 'Detecting…';
-    detectLoop();
-  }
-});
-
+// 4️⃣ Button wiring
 startBtn.addEventListener('click', () => {
   isDetecting = true;
   status.textContent = 'Detecting…';
@@ -106,31 +114,26 @@ stopBtn.addEventListener('click', () => {
   status.textContent = 'Detection stopped.';
 });
 
-// 5️⃣ Load the model
-cocoSsd.load().then(m => {
-  model = m;
-  status.textContent = 'Model loaded! Select camera and enter.';
-});
-
-// ─── Initialization (REPLACED) ───────────────────────
+// 5️⃣ Model load + initialization
 cocoSsd.load().then(m => {
   model = m;
   status.textContent = 'Model loaded! Please select a camera.';
+  getCameras();
 });
-
-getCameras();
 
 enterBtn.addEventListener('click', async () => {
   if (!cameraSelect.value) {
     status.textContent = 'No camera available.';
     return;
   }
+
   homeScreen.classList.add('hidden');
   detectScreen.classList.remove('hidden');
 
   await startCamera(cameraSelect.value);
+
   if (model) {
-    isDetecting    = true;
+    isDetecting = true;
     status.textContent = 'Detecting…';
     detectLoop();
   }
