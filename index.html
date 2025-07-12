@@ -10,52 +10,15 @@
     <h1>blindAid</h1>
     <p>Accessible Object Detection Powered by AI</p>
   </header>
-
   <main>
+    <select id="cameraSelect"></select>
     <video id="video" autoplay muted playsinline></video>
     <div id="status">Loading model...</div>
     <ul id="objects"></ul>
   </main>
 
-  <!-- Load TensorFlow and COCO-SSD from your local lib folder -->
   <script src="lib/tf.min.js"></script>
   <script src="lib/coco-ssd.min.js"></script>
-
-  <script>
-    let video = document.getElementById('video');
-    let status = document.getElementById('status');
-    let objectsList = document.getElementById('objects');
-    let model;
-
-    // Start camera stream
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        console.error("Camera error:", err);
-        status.textContent = "Camera access denied";
-      });
-
-    // Load COCO-SSD model and begin detection
-    cocoSsd.load().then(loadedModel => {
-      model = loadedModel;
-      status.textContent = "Model loaded. Detecting...";
-      detectLoop();
-    });
-
-    // Run detection loop
-    function detectLoop() {
-      model.detect(video).then(predictions => {
-        objectsList.innerHTML = '';
-        predictions.forEach(pred => {
-          const item = document.createElement('li');
-          item.textContent = pred.class;
-          objectsList.appendChild(item);
-        });
-        requestAnimationFrame(detectLoop);
-      });
-    }
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
