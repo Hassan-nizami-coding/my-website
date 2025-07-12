@@ -6,6 +6,7 @@ const status = document.getElementById('status');
 const objectsList = document.getElementById('objects');
 let model;
 let currentStream;
+let isDetecting = false;
 
 async function getCameras() {
   const devices = await navigator.mediaDevices.enumerateDevices();
