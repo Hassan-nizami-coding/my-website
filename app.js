@@ -57,7 +57,6 @@ stopBtn.addEventListener('click', () => {
 cocoSsd.load().then(loadedModel => {
   model = loadedModel;
   status.textContent = "Model loaded. Detecting...";
-  detectLoop();
 });
 function detectLoop() {
   model.detect(video).then(predictions => {
