@@ -1,71 +1,289 @@
-/* Core */
-/* NEW body bg */
-body, html {
-  background: #e8f0f2; /* a soft teal/gray */
-  /* rest unchanged… */
+/* Core Layout */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0; /* Remove padding from body as content will be overlaid */
+    background: linear-gradient(135deg, #a8c0ff, #3f2b96); /* Vibrant gradient background */
+    color: #fff; /* White text for contrast on dark background */
+    text-align: center;
+    min-height: 100vh; /* Ensure body takes full viewport height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Prevent scrollbars due to fixed video */
 }
 
-/* Wrap detection UI in a flex container */
+/* Header Styling */
+header {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent header */
+    backdrop-filter: blur(5px); /* Blur effect for header */
+    width: 100%;
+    position: fixed; /* Fix header at the top */
+    top: 0;
+    left: 0;
+    z-index: 10; /* Ensure header is above other content */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+    font-size: 2.8rem;
+    margin: 0;
+    color: #e0f2f7; /* Light blue for heading */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+p {
+    font-size: 1.1rem;
+    color: #bbdefb; /* Lighter blue for sub-text */
+    margin-top: 0.5rem;
+}
+
+/* --- Screen Separation --- */
+#homeScreen {
+    margin-top: 6rem; /* Adjust for fixed header */
+    padding: 2rem;
+    background-color: rgba(255, 255, 255, 0.2); /* Lighter transparent background */
+    backdrop-filter: blur(8px);
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    max-width: 90%;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: center;
+    position: relative; /* Ensure it's above video */
+    z-index: 5;
+}
+
+#homeScreen p {
+    color: #fff;
+    font-size: 1.2rem;
+}
+
+/* Camera Selector */
+#cameraSelect {
+    padding: 0.8rem 1.5rem;
+    font-size: 1.1rem;
+    border: 2px solid #64b5f6; /* Blue border */
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.9); /* Almost opaque white */
+    color: #333;
+    max-width: 100%;
+    width: 280px;
+    appearance: none; /* Remove default select arrow */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%230078D7%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-24.6%200L146.2%20188.3%2030%2069.4a17.6%2017.6%200%200%200-24.6%2024.6l116.2%20116.2a17.6%2017.6%200%200%200%2024.6%200l116.2-116.2a17.6%2017.6%200%200%200%200-24.6z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 15px top 50%;
+    background-size: 0.65em auto;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#cameraSelect:focus {
+    border-color: #2196f3;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
+    outline: none;
+}
+
+/* Buttons */
+button {
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 30px; /* More rounded buttons */
+    border: none;
+    cursor: pointer;
+    margin: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#enterBtn {
+    background: linear-gradient(45deg, #0078D7, #005bb5); /* Blue gradient */
+    color: white;
+}
+
+#enterBtn:hover {
+    background: linear-gradient(45deg, #005bb5, #0078D7);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+#startBtn {
+    background: linear-gradient(45deg, #4CAF50, #2e7d32); /* Green gradient */
+    color: white;
+}
+
+#startBtn:hover {
+    background: linear-gradient(45deg, #2e7d32, #4CAF50);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+#stopBtn {
+    background: linear-gradient(45deg, #f44336, #c62828); /* Red gradient */
+    color: white;
+}
+
+#stopBtn:hover {
+    background: linear-gradient(45deg, #c62828, #f44336);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Detection Screen --- */
 #detectionScreen {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;  /* vertical center */
-  align-items: center;      /* horizontal center */
-  height: 100vh;
-  padding: 0;
+    display: none; /* Hidden by default */
+    position: fixed; /* Take full screen */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden; /* Hide scrollbars */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Align content to bottom */
+    align-items: center;
 }
 
-/* Make the select + status centered and larger */
-#detectionScreen select,
-#detectionScreen #status {
-  font-size: 1.2rem;
-  margin: 0.5rem 0;
-  width: 80%;
-  max-width: 300px;
-  text-align: center;
-}
-
-/* Shrink the overlay on startDetecting */
-.detecting main {
-  background: transparent !important;
-  backdrop-filter: none !important;
-}
-
-/* Fullscreen video background */
+/* Fullscreen Camera View */
 video {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  object-fit: cover;
-  z-index: -1;
-  background: #000;
+    position: absolute; /* Absolute positioning within #detectionScreen */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cover the entire container */
+    z-index: -1; /* Place video behind other content */
+    background: #000; /* Fallback background for video */
 }
 
-/* Detection UI overlay */
+/* Overlay Content (Detection Status, List, Buttons) */
 #detectionScreen main {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%; transform: translateX(-50%);
-  background: rgba(255,255,255,0.8);
-  backdrop-filter: blur(4px);
-  padding: 1.5rem;
-  border-radius: 12px;
-  max-width: 90%;
+    position: relative; /* Relative to #detectionScreen */
+    z-index: 1; /* Ensure it's above the video */
+    padding: 1.5rem 2rem;
+    background-color: rgba(0, 0, 0, 0.6); /* Darker transparent background for readability */
+    backdrop-filter: blur(10px); /* Stronger blur for overlay */
+    border-radius: 20px;
+    max-width: 90%;
+    width: 600px; /* Max width for content */
+    margin-bottom: 2rem; /* Spacing from bottom */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    color: #e0f7fa; /* Light text for readability */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
+
+/* Detection Status */
 #status {
-  font-size: 1.2rem;
-  color: #0078D7;
-  margin-bottom: 1rem;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #81c784; /* Light green for status */
+    margin-bottom: 0.5rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
 }
-ul { list-style: none; padding: 0; margin-bottom: 1rem; }
-li { margin: 0.3rem 0; font-size: 1rem; }
-.btn-group button {
-  padding: 0.6rem 1.2rem;
-  margin: 0 0.5rem;
-  font-size: 1rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
+
+/* Object List */
+ul#objects {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 150px; /* Limit height for scroll if many objects */
+    overflow-y: auto; /* Enable scrolling for long lists */
+    text-align: left;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
-#startBtn { background: #28a745; color: #fff; }
-#stopBtn  { background: #dc3545; color: #fff; }
+
+ul#objects li {
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+    padding-left: 0.5rem;
+    border-left: 3px solid #64b5f6; /* Blue accent on list items */
+}
+
+ul#objects li:last-child {
+    margin-bottom: 0;
+}
+
+/* Controls (Buttons) on Detection Screen */
+.controls {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2rem;
+    }
+
+    p {
+        font-size: 0.9rem;
+    }
+
+    #homeScreen {
+        padding: 1.5rem;
+        width: 95%;
+    }
+
+    button {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    #detectionScreen main {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        width: 95%;
+    }
+
+    #status {
+        font-size: 1.2rem;
+    }
+
+    ul#objects li {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 0.8rem;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    p {
+        font-size: 0.8rem;
+    }
+
+    #homeScreen {
+        margin-top: 5rem;
+    }
+
+    button {
+        width: 100%; /* Full width buttons on very small screens */
+        margin: 0.5rem 0;
+    }
+
+    .controls {
+        flex-direction: column;
+    }
+}
