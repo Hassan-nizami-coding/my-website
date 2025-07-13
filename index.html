@@ -1,38 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>blindAid – Object Detection</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>blindAid - Object Detection</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <!-- Home screen -->
-  <div id="homeScreen" class="screen">
     <header>
-      <h1>blindAid</h1>
-      <p>Accessible Object Detection Powered by AI</p>
+        <h1>blindAid</h1>
+        <p>Accessible Object Detection Powered by AI</p>
     </header>
-    <select id="cameraSelect"></select>
-    <button id="enterBtn">Enter Detection Mode</button>
-  </div>
 
-  <!-- Detection screen -->
-  <div id="detectionScreen" class="screen hidden">
-    <video id="video" autoplay muted playsinline></video>
-    <main>
-      <div id="status">Loading model…</div>
-      <ul id="objects"></ul>
-      <div class="btn-group">
-        <button id="startBtn">Start Seeing</button>
-        <button id="stopBtn">Stop Seeing</button>
-      </div>
-    </main>
-  </div>
+    <!-- Home Screen -->
+    <div id="homeScreen">
+        <p>Select your camera and enter detection mode.</p>
+        <select id="cameraSelect"></select>
+        <button id="enterBtn">Enter Detection Mode</button>
+    </div>
 
-  <script src="lib/tf.min.js"></script>
-  <script src="lib/coco-ssd.min.js"></script>
-  <script src="app.js"></script>
+    <!-- Detection Screen -->
+    <div id="detectionScreen" style="display: none;">
+        <video id="video" autoplay muted playsinline></video>
+        <main>
+            <div id="status">Loading model...</div>
+            <ul id="objects"></ul>
+            <div class="controls">
+                <button id="startBtn">Start Seeing</button>
+                <button id="stopBtn">Stop Seeing</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- TensorFlow.js and COCO-SSD libraries -->
+    <script src="lib/tf.min.js"></script>
+    <script src="lib/coco-ssd.min.js"></script>
+    <!-- Your application logic -->
+    <script src="app.js"></script>
 </body>
 </html>
