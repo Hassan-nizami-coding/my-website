@@ -13,7 +13,8 @@ let model; // Stores the loaded COCO-SSD model
 let currentStream; // Stores the current camera stream
 let isDetecting = false; // Flag to control detection loop
 let speechSynthesisAvailable = false; // Flag for Web Speech API availability
-let currentSpokenDescription = ""; // Store the last spoken description for replay
+let lastSpokenDescription = ""; // Store the last spoken description to prevent repetition
+let speechTimeoutId = null; // To manage speech debouncing
 
 // --- Initialization on DOM Content Loaded ---
 document.addEventListener('DOMContentLoaded', async () => {
@@ -30,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if ('serviceWorker' in navigator) {
         try {
             // Adjust scope if your app is not in a /blindAid/ subdirectory
-            await navigator.serviceWorker.register('service-worker.js', { scope: '/' });
+            await navigator.serviceWorker.register('service-worker.js', { scope: '/my-website/' }); // Corrected scope for GitHub Pages
             console.log('Service Worker Registered');
         } catch (error) {
             console.error('Service Worker Registration Failed:', error);
@@ -60,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 function addEventListeners() {
     enterBtn.addEventListener('click', () => {
         homeScreen.style.display = 'none';
-        detectionScreen.style.display = 'block';
+        detectionScreen.style.display = 'flex'; // Use flex to maintain centering
         startCamera(cameraSelect.value); // Start camera with selected device
         if (model) { // Only start detecting if model is loaded
             isDetecting = true;
@@ -162,12 +163,13 @@ async function detectLoop() {
         let objectDescriptions = [];
 
         if (predictions.length === 0) {
-            const item = document.createElement('li');
-            item.textContent = "No objects detected";
-            objectsList.appendChild(item);
-            currentSpokenDescription = "No objects detected.";
-            if (speechSynthesisAvailable) {
-                speakText(currentSpokenDescription);
+            const newDescription = "No objects detected.";
+            if (newDescription !== lastSpokenDescription) {
+                lastSpokenDescription = newDescription;
+                objectsList.innerHTML = `<li>${newDescription}</li>`;
+                if (speechSynthesisAvailable) {
+                    speakText(newDescription);
+                }
             }
         } else {
             predictions.forEach(pred => {
@@ -187,24 +189,21 @@ async function detectLoop() {
             statusDiv.textContent = "Generating detailed description with AI ✨...";
             const llmDescription = await getLlmDescription(objectDescriptions);
 
-            // Display the LLM's description
+            let newDescription;
             if (llmDescription) {
-                const item = document.createElement('li');
-                item.textContent = llmDescription;
-                objectsList.appendChild(item);
-                currentSpokenDescription = llmDescription;
-                if (speechSynthesisAvailable) {
-                    speakText(currentSpokenDescription);
-                }
+                newDescription = llmDescription;
             } else {
                 // Fallback to simple description if LLM fails
-                const fallbackText = "Detected: " + objectDescriptions.join(', ') + ".";
-                const item = document.createElement('li');
-                item.textContent = fallbackText;
-                objectsList.appendChild(item);
-                currentSpokenDescription = fallbackText;
+                newDescription = "Detected: " + objectDescriptions.join(', ') + ".";
+            }
+
+            // Only speak if the description has significantly changed
+            if (newDescription !== lastSpokenDescription) {
+                lastSpokenDescription = newDescription;
+                // Display the new description
+                objectsList.innerHTML = `<li>${newDescription}</li>`;
                 if (speechSynthesisAvailable) {
-                    speakText(currentSpokenDescription);
+                    speakText(newDescription);
                 }
             }
             statusDiv.textContent = "Detecting..."; // Reset status
@@ -276,8 +275,16 @@ function speakText(text) {
     // utterance.pitch = 1; // 0 to 2
     // utterance.rate = 1; // 0.1 to 10
 
-    utterance.onstart = () => console.log('Speech started');
-    utterance.onend = () => console.log('Speech ended');
+    utterance.onstart = () => {
+        if (speechTimeoutId) clearTimeout(speechTimeoutId); // Clear any pending speech
+    };
+    utterance.onend = () => {
+        // After speech ends, set a timeout before allowing new speech
+        // This prevents immediate re-speaking if the detection loop is very fast
+        speechTimeoutId = setTimeout(() => {
+            // This timeout can be adjusted if descriptions change very rapidly and you want them spoken
+        }, 1000); // Wait 1 second before potentially speaking again
+    };
     utterance.onerror = (event) => {
         console.error('SpeechSynthesisUtterance.onerror', event);
         statusDiv.textContent = 'Error during speech synthesis.';
@@ -288,5 +295,9 @@ function speakText(text) {
 function stopSpeaking() {
     if (window.speechSynthesis.speaking) {
         window.speechSynthesis.cancel();
+    }
+    if (speechTimeoutId) {
+        clearTimeout(speechTimeoutId);
+        speechTimeoutId = null;
     }
 }
