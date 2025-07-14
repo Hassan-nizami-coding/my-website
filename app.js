@@ -52,7 +52,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (err) {
         console.error("Failed to load model:", err);
-        statusDiv.textContent = "Error loading AI model. Please refresh the page.";
+        statusDiv.textContent = "Error loading AI model. Please check your internet connection or try again.";
+        // If model fails to load, ensure detection cannot start
+        enterBtn.disabled = true;
+        startBtn.disabled = true;
     }
 
     // Add event listeners once DOM is ready
@@ -173,7 +176,6 @@ async function detectLoop() {
         let currentObjectDescriptions = [];
 
         // Prepare a consistent string representation of current objects for comparison
-        // Sort by class and then position to ensure consistent string for comparison
         const sortedPredictions = predictions.map(pred => ({
             class: pred.class,
             position: (() => {
@@ -225,23 +227,41 @@ async function detectLoop() {
                     isLlmProcessing = true; // Set flag to indicate LLM processing
                     statusDiv.textContent = "Generating detailed description with AI ✨...";
 
-                    // It's crucial to use the objects from the *current* detection cycle
-                    // or re-detect if you want the absolute latest. For simplicity, we'll
-                    // use currentObjectDescriptions as it was just derived.
-                    const llmDescription = await getLlmDescription(currentObjectDescriptions);
+                    // Get the latest predictions before calling LLM to ensure fresh data
+                    const latestPredictions = await model.detect(video);
+                    const latestObjectDescriptions = latestPredictions.map(pred => {
+                        const [x, y, width, height] = pred.bbox;
+                        const centerX = x + width / 2;
+                        const videoWidth = video.videoWidth || video.offsetWidth;
+                        const position = centerX < videoWidth / 3 ? 'left' : centerX < 2 * videoWidth / 3 ? 'center' : 'right';
+                        return `a ${pred.class} on the ${position}`;
+                    });
+
+                    // Check for offline status before calling LLM
+                    let llmDescription = null;
+                    if (navigator.onLine) {
+                         llmDescription = await getLlmDescription(latestObjectDescriptions);
+                    } else {
+                        console.log("Offline: Skipping Gemini API call.");
+                        statusDiv.textContent = "Offline: Using basic description.";
+                    }
+
 
                     let newDescription;
                     if (llmDescription) {
                         newDescription = llmDescription;
                     } else {
-                        // Fallback to simple description if LLM fails
-                        newDescription = "Detected: " + currentObjectDescriptions.join(', ') + ".";
+                        // Fallback to simple description if LLM fails or is skipped (e.g., offline)
+                        newDescription = "Detected: " + latestObjectDescriptions.join(', ') + ".";
+                        if (!navigator.onLine) {
+                            newDescription += " (AI offline)";
+                        }
                     }
 
-                    // Only speak if the LLM-generated description is different from the last spoken one
+                    // Only speak if the generated description is different from the last spoken one
                     if (newDescription !== lastSpokenDescription) {
                         lastSpokenDescription = newDescription;
-                        objectsList.innerHTML = `<li>${newDescription}</li>`; // Update with LLM description
+                        objectsList.innerHTML = `<li>${newDescription}</li>`; // Update with LLM description or fallback
                         if (speechSynthesisAvailable) {
                             speakText(newDescription);
                         }
@@ -256,7 +276,7 @@ async function detectLoop() {
         // Continue the loop if still detecting
         requestAnimationFrame(detectLoop);
     } catch (err) {
-        console.error("Error during detection or LLM call:", err);
+        console.error("Error during detection or description generation:", err);
         statusDiv.textContent = "Error during object detection or description generation.";
         isDetecting = false; // Stop detection on error
         stopSpeaking();
@@ -274,6 +294,11 @@ async function getLlmDescription(objectDescriptions) {
     if (objectDescriptions.length === 0) {
         return "No objects detected.";
     }
+    
+    // Explicitly check if online before attempting API call
+    if (!navigator.onLine) {
+        return null; // Return null if offline, signaling to use fallback
+    }
 
     const objectListString = objectDescriptions.join(', ');
     const prompt = `Based on these detected objects: ${objectListString}. Provide a concise, helpful, and natural language description for a visually impaired person. Focus on what these objects are and their relative positions. Do not invent objects not listed. Start directly with the description.`;
@@ -281,7 +306,9 @@ async function getLlmDescription(objectDescriptions) {
     try {
         const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
         const payload = { contents: chatHistory };
-        const apiKey = ""; // API key is provided by the Canvas environment
+        // API key is provided by the Canvas environment for demonstration,
+        // in a real app this should be securely managed (e.g., server-side)
+        const apiKey = ""; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
         const response = await fetch(apiUrl, {
