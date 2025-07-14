@@ -3,7 +3,7 @@ const video = document.getElementById('video');
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const cameraSelect = document.getElementById('cameraSelect');
-const statusDiv = document.getElementById('status'); // Renamed to avoid conflict with global status
+const statusDiv = document.getElementById('status');
 const objectsList = document.getElementById('objects');
 const homeScreen = document.getElementById('homeScreen');
 const detectionScreen = document.getElementById('detectionScreen');
@@ -14,7 +14,10 @@ let currentStream; // Stores the current camera stream
 let isDetecting = false; // Flag to control detection loop
 let speechSynthesisAvailable = false; // Flag for Web Speech API availability
 let lastSpokenDescription = ""; // Store the last spoken description to prevent repetition
-let speechTimeoutId = null; // To manage speech debouncing
+let llmCallTimeoutId = null; // New variable for debouncing LLM calls
+const LLM_DEBOUNCE_TIME = 2000; // 2 seconds debounce time for LLM call
+let lastDetectedObjectsString = ""; // To store a string representation of the last detected objects for comparison
+let isLlmProcessing = false; // Flag to indicate if an LLM call is currently in progress
 
 // --- Initialization on DOM Content Loaded ---
 document.addEventListener('DOMContentLoaded', async () => {
@@ -30,7 +33,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Register Service Worker for offline capabilities
     if ('serviceWorker' in navigator) {
         try {
-            // Adjust scope if your app is not in a /blindAid/ subdirectory
             await navigator.serviceWorker.register('service-worker.js', { scope: '/my-website/' }); // Corrected scope for GitHub Pages
             console.log('Service Worker Registered');
         } catch (error) {
@@ -91,6 +93,15 @@ function addEventListeners() {
         isDetecting = false;
         statusDiv.textContent = "Stopped detecting.";
         stopSpeaking(); // Stop any ongoing speech
+        // Clear any pending LLM calls when stopping detection
+        if (llmCallTimeoutId) {
+            clearTimeout(llmCallTimeoutId);
+            llmCallTimeoutId = null;
+        }
+        isLlmProcessing = false; // Reset LLM processing flag
+        lastDetectedObjectsString = ""; // Reset state
+        lastSpokenDescription = ""; // Reset state
+        objectsList.innerHTML = ''; // Clear displayed objects
     });
 }
 
@@ -159,8 +170,21 @@ async function detectLoop() {
 
     try {
         const predictions = await model.detect(video);
-        objectsList.innerHTML = ''; // Clear previous detections
-        let objectDescriptions = [];
+        let currentObjectDescriptions = [];
+
+        // Prepare a consistent string representation of current objects for comparison
+        // Sort by class and then position to ensure consistent string for comparison
+        const sortedPredictions = predictions.map(pred => ({
+            class: pred.class,
+            position: (() => {
+                const [x, y, width, height] = pred.bbox;
+                const centerX = x + width / 2;
+                const videoWidth = video.videoWidth || video.offsetWidth;
+                return centerX < videoWidth / 3 ? 'left' : centerX < 2 * videoWidth / 3 ? 'center' : 'right';
+            })()
+        })).sort((a, b) => a.class.localeCompare(b.class) || a.position.localeCompare(b.position));
+
+        const currentDetectedObjectsString = JSON.stringify(sortedPredictions);
 
         if (predictions.length === 0) {
             const newDescription = "No objects detected.";
@@ -170,43 +194,63 @@ async function detectLoop() {
                 if (speechSynthesisAvailable) {
                     speakText(newDescription);
                 }
-            }
-        } else {
-            predictions.forEach(pred => {
-                const [x, y, width, height] = pred.bbox;
-                const centerX = x + width / 2;
-                const videoWidth = video.videoWidth || video.offsetWidth;
-                const position = centerX < videoWidth / 3
-                    ? 'left'
-                    : centerX < 2 * videoWidth / 3
-                        ? 'center'
-                        : 'right';
-
-                objectDescriptions.push(`a ${pred.class} on the ${position}`);
-            });
-
-            // Use Gemini API to get a more elaborate description
-            statusDiv.textContent = "Generating detailed description with AI ✨...";
-            const llmDescription = await getLlmDescription(objectDescriptions);
-
-            let newDescription;
-            if (llmDescription) {
-                newDescription = llmDescription;
             } else {
-                // Fallback to simple description if LLM fails
-                newDescription = "Detected: " + objectDescriptions.join(', ') + ".";
+                objectsList.innerHTML = `<li>${newDescription}</li>`; // Ensure it's always displayed if no objects
             }
+            // Clear any pending LLM calls if no objects are detected
+            if (llmCallTimeoutId) {
+                clearTimeout(llmCallTimeoutId);
+                llmCallTimeoutId = null;
+            }
+            isLlmProcessing = false; // Reset LLM processing flag
+            lastDetectedObjectsString = ""; // Reset if no objects
+        } else {
+            // Populate currentObjectDescriptions for display and LLM call
+            currentObjectDescriptions = sortedPredictions.map(pred => `a ${pred.class} on the ${pred.position}`);
 
-            // Only speak if the description has significantly changed
-            if (newDescription !== lastSpokenDescription) {
-                lastSpokenDescription = newDescription;
-                // Display the new description
-                objectsList.innerHTML = `<li>${newDescription}</li>`;
-                if (speechSynthesisAvailable) {
-                    speakText(newDescription);
+            // Always display the raw detection immediately for visual feedback
+            objectsList.innerHTML = `<li>Detected: ${currentObjectDescriptions.join(', ')}</li>`;
+
+            // Only trigger LLM call if the set of detected objects has changed AND no LLM call is currently processing
+            if (currentDetectedObjectsString !== lastDetectedObjectsString && !isLlmProcessing) {
+                lastDetectedObjectsString = currentDetectedObjectsString; // Update the last detected state
+
+                // Clear any existing debounce timeout
+                if (llmCallTimeoutId) {
+                    clearTimeout(llmCallTimeoutId);
                 }
+
+                // Set a new debounce timeout for the LLM call
+                llmCallTimeoutId = setTimeout(async () => {
+                    isLlmProcessing = true; // Set flag to indicate LLM processing
+                    statusDiv.textContent = "Generating detailed description with AI ✨...";
+
+                    // It's crucial to use the objects from the *current* detection cycle
+                    // or re-detect if you want the absolute latest. For simplicity, we'll
+                    // use currentObjectDescriptions as it was just derived.
+                    const llmDescription = await getLlmDescription(currentObjectDescriptions);
+
+                    let newDescription;
+                    if (llmDescription) {
+                        newDescription = llmDescription;
+                    } else {
+                        // Fallback to simple description if LLM fails
+                        newDescription = "Detected: " + currentObjectDescriptions.join(', ') + ".";
+                    }
+
+                    // Only speak if the LLM-generated description is different from the last spoken one
+                    if (newDescription !== lastSpokenDescription) {
+                        lastSpokenDescription = newDescription;
+                        objectsList.innerHTML = `<li>${newDescription}</li>`; // Update with LLM description
+                        if (speechSynthesisAvailable) {
+                            speakText(newDescription);
+                        }
+                    }
+                    statusDiv.textContent = "Detecting..."; // Reset status
+                    isLlmProcessing = false; // Reset LLM processing flag
+                    llmCallTimeoutId = null; // Reset timeout ID
+                }, LLM_DEBOUNCE_TIME);
             }
-            statusDiv.textContent = "Detecting..."; // Reset status
         }
 
         // Continue the loop if still detecting
@@ -216,6 +260,12 @@ async function detectLoop() {
         statusDiv.textContent = "Error during object detection or description generation.";
         isDetecting = false; // Stop detection on error
         stopSpeaking();
+        // Ensure LLM processing flag is reset on error
+        isLlmProcessing = false;
+        if (llmCallTimeoutId) {
+            clearTimeout(llmCallTimeoutId);
+            llmCallTimeoutId = null;
+        }
     }
 }
 
@@ -267,7 +317,10 @@ function speakText(text) {
     if (!speechSynthesisAvailable || !text) {
         return;
     }
-    stopSpeaking(); // Stop any previous speech before starting new one
+    // Stop any previous speech immediately
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+    }
 
     const utterance = new SpeechSynthesisUtterance(text);
     // You can customize voice, pitch, rate here if needed
@@ -275,16 +328,8 @@ function speakText(text) {
     // utterance.pitch = 1; // 0 to 2
     // utterance.rate = 1; // 0.1 to 10
 
-    utterance.onstart = () => {
-        if (speechTimeoutId) clearTimeout(speechTimeoutId); // Clear any pending speech
-    };
-    utterance.onend = () => {
-        // After speech ends, set a timeout before allowing new speech
-        // This prevents immediate re-speaking if the detection loop is very fast
-        speechTimeoutId = setTimeout(() => {
-            // This timeout can be adjusted if descriptions change very rapidly and you want them spoken
-        }, 1000); // Wait 1 second before potentially speaking again
-    };
+    utterance.onstart = () => console.log('Speech started');
+    utterance.onend = () => console.log('Speech ended');
     utterance.onerror = (event) => {
         console.error('SpeechSynthesisUtterance.onerror', event);
         statusDiv.textContent = 'Error during speech synthesis.';
@@ -296,8 +341,10 @@ function stopSpeaking() {
     if (window.speechSynthesis.speaking) {
         window.speechSynthesis.cancel();
     }
-    if (speechTimeoutId) {
-        clearTimeout(speechTimeoutId);
-        speechTimeoutId = null;
+    // Also clear any pending LLM calls if speech is stopped manually
+    if (llmCallTimeoutId) {
+        clearTimeout(llmCallTimeoutId);
+        llmCallTimeoutId = null;
     }
+    isLlmProcessing = false; // Ensure this is reset if speech is stopped
 }
