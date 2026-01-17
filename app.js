@@ -308,7 +308,7 @@ async function getLlmDescription(objectDescriptions) {
         const payload = { contents: chatHistory };
         // API key is provided by the Canvas environment for demonstration,
         // in a real app this should be securely managed (e.g., server-side)
-        const apiKey = ""; 
+        const apiKey = "AIzaSyCMTaSfpv1dXCnVurBpzajF4a4qSInVpzw"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
         const response = await fetch(apiUrl, {

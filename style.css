@@ -1,9 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
+
 /* Core Layout */
 body {
     font-family: 'Segoe UI', sans-serif;
     margin: 0;
     padding: 0; /* Remove padding from body as content will be overlaid */
-    background: linear-gradient(135deg, #a8c0ff, #3f2b96); /* Vibrant gradient background */
+    background: linear-gradient(135deg, #E0EFE0, #B5CDB5); /* More subtle matcha-themed gradient */
     color: #fff; /* White text for contrast on dark background */
     text-align: center;
     min-height: 100vh; /* Ensure body takes full viewport height */
@@ -29,15 +31,22 @@ header {
 }
 
 h1 {
-    font-size: 2.8rem;
+    font-family: 'Caveat', cursive;
+    font-size: 3.5rem;
     margin: 0;
-    color: #e0f2f7; /* Light blue for heading */
+    color: #E8F5E9; /* A light, creamy green */
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+h1:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease-in-out;
+}
+
 p {
-    font-size: 1.1rem;
-    color: #bbdefb; /* Lighter blue for sub-text */
+    font-family: 'Caveat', cursive;
+    font-size: 1.5rem;
+    color: #C8E6C9; /* A slightly darker creamy green */
     margin-top: 0.5rem;
 }
 
@@ -58,6 +67,7 @@ p {
     justify-content: center;
     position: relative; /* Ensure it's above video */
     z-index: 5;
+    animation: fadeIn 1s ease-in-out;
 }
 
 #homeScreen p {
@@ -126,7 +136,7 @@ button {
 #startBtn:hover {
     background: linear-gradient(45deg, #2e7d32, #4CAF50);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.8);
 }
 
 #stopBtn {
@@ -287,5 +297,41 @@ ul#objects li:last-child {
 
     .controls {
         flex-direction: column;
+    }
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes title-animation {
+    0% {
+        transform: translateY(0px)
+    }
+    50% {
+        transform: translateY(-5px)
+    }
+    100% {
+        transform: translateY(0px)
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
     }
 }
